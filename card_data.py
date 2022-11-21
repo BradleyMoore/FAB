@@ -1,10 +1,11 @@
+from typing import Any
 import aiohttp, asyncio, requests, time
 from bs4 import BeautifulSoup
 from log import log
 from set_codes import SET_CODES
 
 
-def create_card(row):
+def create_card(row: 'ResultSet') -> dict[str, Any]: # type: ignore
     """Get a single card from a row in the html table.
 
     Args:
@@ -18,8 +19,7 @@ def create_card(row):
     fields = row.select('td')
     card['set_code'] = fields[0].text.strip()
     name_string = fields[1].text.strip()
-    card['card_name'], card['color'], card['pitch_value'] = parse_name(
-        name_string)
+    card['card_name'], card['color'], card['pitch_value'] = parse_name(name_string)
     card['printing_technique'] = fields[2].text.strip()
     card['notes'] = fields[3].text.strip()
     card['set'] = get_card_set(card['set_code'])
@@ -27,7 +27,7 @@ def create_card(row):
     return card
 
 
-def determine_color(pitch_value):
+def determine_color(pitch_value: int) -> str:
     """Return the card color based on the pitch value.
 
     Args:
@@ -51,25 +51,16 @@ def determine_color(pitch_value):
     return color
 
 
-def get_all_cards(urls):
-    """Get all cards from each url in urls.
+async def get_all_cards(urls: list[tuple[str, str]]) -> list[dict[str, Any]]:
+    """Get all cards from all links on page.
 
     Args:
-        urls: List of urls for each card set.
+        urls: urls for each card set
 
     Returns:
-        All cards from each set.
+        all cards in existance for Flesh and Blood TCG
     """
-
-    cards = []
-
-    for url in urls:
-        cards.append(get_cards(url[1])[:])
-
-    return cards
-
-
-async def get_all_cards_async(urls):
+    
     cards = []
     results = []
     async with aiohttp.ClientSession() as session:
@@ -177,7 +168,8 @@ def get_tasks(session, urls):
     """Get all async tasks.
 
     Args:
-        session (str): the url for the card tables
+        session: the url for the card tables
+        urls: list of urls for each card set
 
     Returns:
         the response data from the call to the url
@@ -190,7 +182,7 @@ def get_tasks(session, urls):
     return tasks
 
 
-def parse_name(name):
+def parse_name(name: str) -> tuple:
     """Separate the name and the pitch value.
 
     Args:
@@ -200,31 +192,34 @@ def parse_name(name):
         the name and pitch values of the card
     """
 
-    pitch_values = ['(1)', '(2)', '(3)']
-
-    if any(x in name for x in pitch_values):
+    if name[-3] == '(' and name[-1] == ')':
         partition = name.rpartition(' ')
         card_name = partition[0]
         pitch_value = int(partition[-1].strip('(').strip(')'))
-        color = determine_color(pitch_value)
+        color = determine_color(pitch_value)      
     else:
         card_name = name
         pitch_value = 0
-        color = ''
+        color: str = ''
 
     return card_name, color, pitch_value
 
 
 def main():
-    start = time.time()
+    start: float = time.time()
     set_urls = get_set_urls()
 
-    results = asyncio.run(get_all_cards_async(set_urls))
+    results = asyncio.run(get_all_cards(set_urls))
     # cards = get_all_cards(set_urls)
     # print(len(cards))
     end = time.time()
     print(end-start)
+    print(results[1])
 
 
 if __name__ == '__main__':
     main()
+    
+    def help(test):
+        test = 'go'
+        print(test*10)
