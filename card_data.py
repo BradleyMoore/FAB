@@ -1,7 +1,4 @@
-import aiohttp
-import asyncio
-import requests
-import time
+import aiohttp, asyncio, requests, time
 from bs4 import BeautifulSoup
 from log import log
 from set_codes import SET_CODES
