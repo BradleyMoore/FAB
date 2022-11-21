@@ -5,7 +5,7 @@ from log import log
 from set_codes import SET_CODES
 
 
-def create_card(row: 'ResultSet') -> dict[str, Any]: # type: ignore
+def create_card(row: 'ResultSet') -> dict[str, str | int]: # type: ignore
     """Get a single card from a row in the html table.
 
     Args:
@@ -17,12 +17,12 @@ def create_card(row: 'ResultSet') -> dict[str, Any]: # type: ignore
 
     card = {}
     fields = row.select('td')
-    card['set_code'] = fields[0].text.strip()
+    card['card_number'] = fields[0].text.strip()
     name_string = fields[1].text.strip()
     card['card_name'], card['color'], card['pitch_value'] = parse_name(name_string)
     card['printing_technique'] = fields[2].text.strip()
     card['notes'] = fields[3].text.strip()
-    card['set'] = get_card_set(card['set_code'])
+    card['set'] = get_card_set(card['card_number'])
 
     return card
 
@@ -83,7 +83,7 @@ async def get_all_cards(urls: list[tuple[str, str]]) -> list[dict[str, Any]]:
     return cards
 
 
-def get_card_set(card_number):
+def get_card_set(card_number: str) -> str | None:
     """Get the name of the set the card belongs to.
 
     Args:
@@ -99,9 +99,10 @@ def get_card_set(card_number):
         return SET_CODES[card_set.lower()]
     except Exception:
         log('Info', card_number + ' is not in set_codes.py')
+        return None
 
 
-def get_cards(url):
+def get_cards(url: str) -> list[dict[str, str | int]]:
     """Get all cards from a specific url.
 
     Args:
@@ -127,7 +128,7 @@ def get_cards(url):
     return cards
 
 
-def get_page(url):
+def get_page(url: str) -> 'Response': # type: ignore
     """Load 1 page from the given url.
 
     Args:
@@ -144,7 +145,7 @@ def get_page(url):
     return requests.get(url, headers=headers)
 
 
-def get_set_urls():
+def get_set_urls() -> list[tuple[str, str]]:
     """Get the urls for all card sets.
 
     Returns:
@@ -164,7 +165,7 @@ def get_set_urls():
     return card_sets
 
 
-def get_tasks(session, urls):
+def get_tasks(session: 'ClientSession', urls: list[tuple[str, str]]) -> list['Unknown']: # type: ignore
     """Get all async tasks.
 
     Args:
@@ -182,7 +183,7 @@ def get_tasks(session, urls):
     return tasks
 
 
-def parse_name(name: str) -> tuple:
+def parse_name(name: str) -> tuple[str, str, int]:
     """Separate the name and the pitch value.
 
     Args:
@@ -205,7 +206,7 @@ def parse_name(name: str) -> tuple:
     return card_name, color, pitch_value
 
 
-def main():
+def main() -> None:
     start: float = time.time()
     set_urls = get_set_urls()
 
@@ -214,12 +215,9 @@ def main():
     # print(len(cards))
     end = time.time()
     print(end-start)
-    print(results[1])
+
+    return
 
 
 if __name__ == '__main__':
     main()
-    
-    def help(test):
-        test = 'go'
-        print(test*10)
